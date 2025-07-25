@@ -3,6 +3,7 @@ import 'home_tab_screen.dart';
 import 'candidates_tab_screen.dart';
 import 'applications_tab_screen.dart';
 import 'jobs_tab_screen.dart';
+import 'data_vault_page.dart';
 
 class DashboardShellScreen extends StatefulWidget {
   final bool isAdmin;
@@ -33,11 +34,12 @@ class _DashboardShellScreenState extends State<DashboardShellScreen> {
       JobsTabScreen(
         onBackToHome: () => setState(() => _selectedIndex = 0),
         isAdmin: widget.isAdmin,
-        ),
+      ),
       ApplicationsTabScreen(
         onBackToHome: () => setState(() => _selectedIndex = 0),
         isAdmin: widget.isAdmin,
-        ),
+      ),
+      DataVaultPage(),
     ];
     return Scaffold(
       body: widgetOptions[_selectedIndex],
@@ -62,6 +64,11 @@ class _DashboardShellScreenState extends State<DashboardShellScreen> {
             icon: Icon(Icons.article_outlined),
             activeIcon: Icon(Icons.article),
             label: 'Applications',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.storage_outlined),
+            activeIcon: Icon(Icons.storage),
+            label: 'Data Vault',
           ),
         ],
         currentIndex: _selectedIndex,

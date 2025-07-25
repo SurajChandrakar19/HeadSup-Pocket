@@ -6,21 +6,21 @@ import 'dart:convert';
 class DatabaseService {
   static const String baseUrl = 'http://localhost:8080/v1/auth/1/dashboard';
   // Simulate database call for localities
-  // Future<List<String>> getLocalities() async {
-  //   // Replace this with your actual database call
-  //   await Future.delayed(const Duration(seconds: 1)); // Simulate loading
-  //   // Return localities from your database
-  //   return [
-  //     'Marathahalli',
-  //     'MG Layout',
-  //     'Whitefield',
-  //     'Koramangala',
-  //     'Bellandur',
-  //     'Electronic City',
-  //     'Indiranagar',
-  //     'HSR Layout',
-  //   ];
-  // }
+  Future<List<String>> getLocalities() async {
+    // Replace this with your actual database call
+    await Future.delayed(const Duration(seconds: 1)); // Simulate loading
+    // Return localities from your database
+    return [
+      'Marathahalli',
+      'MG Layout',
+      'Whitefield',
+      'Koramangala',
+      'Bellandur',
+      'Electronic City',
+      'Indiranagar',
+      'HSR Layout',
+    ];
+  }
 
   // Simulate database call for companies
   Future<List<Company>> getCompanies() async {

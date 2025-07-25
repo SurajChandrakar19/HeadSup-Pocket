@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:headsup_ats/models/company_id_name_model.dart';
 import '../utils/app_colors.dart';
-import '../services/database_service.dart';
-import '../models/company_model.dart';
-import '../../data/user_role.dart';
-import '../../data/companies_data.dart';
-import '../models/localities_model.dart';
 import '../services/and_candidate_service.dart';
 import '../models/candidate_create_model.dart';
+import '../data/companies_data.dart';
+import '../models/company_model.dart';
 
 class CandidatePopupForm extends StatefulWidget {
   final String initialPhone;
@@ -66,9 +62,8 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
   List<String> localities = [];
   List<String> jobCategories = [];
   // List<Company> get companies => globalCompanies;
-  List<CompanyIdName> companies = [];
-  // Company? selectedCompany;
-  CompanyIdName? selectedCompany;
+  List<Company> companies = globalCompanies;
+  Company? selectedCompany;
 
   // Static options (these could also come from database)
   // final List<String> jobCategories = [
@@ -118,7 +113,8 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
           .toList();
     }
     // Interview time is handled in the date/time picker logic
-    _loadDataFromDatabase();
+    // companies already set from globalCompanies
+    // _loadDataFromDatabase(); // Not needed, using static data
   }
 
   @override
@@ -144,7 +140,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
       setState(() {
         localities = loadedLocalities;
         jobCategories = loadedJobRoleCategories;
-        companies = loadedCompanys;
+        // companies = loadedCompanys; // Not needed, using static data
       });
       // if (globalCompanies.isEmpty) {
       //   final loadedCompanies = await databaseService.getCompanies();
@@ -348,12 +344,35 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
         companyId: int.tryParse(selectedCompanyId!) ?? 0,
       );
 
+      // Add company name to candidateData map for UI
+      final candidateData = {
+        'name': ('${_firstNameController.text.trim()} ${_lastNameController.text.trim()}').trim(),
+        'role': selectedJobCategory ?? '',
+        'location': selectedLocality ?? '',
+        'qualification': selectedQualifications.join(', '),
+        'experience': _experienceController.text,
+        'age': int.tryParse(_ageController.text) ?? 0,
+        'isActiveCandidate': true,
+        'phone': _mobileController.text,
+        'interviewTime': interviewDateTime
+            .toIso8601String()
+            .substring(0, 16)
+            .replaceFirst('T', ' '),
+        'userId': int.tryParse(widget.userId) ?? 0,
+        'companyId': int.tryParse(selectedCompanyId!) ?? 0,
+        'company': selectedCompany?.name ?? '',
+      };
+
       final success = await AddCandidateService.createCandidate(
         candidate,
         widget.userId,
       );
 
       if (success) {
+        // DEBUG: Print candidateData to verify company field
+        print('DEBUG candidateData (onBookInterview):');
+        print(candidateData);
+        widget.onBookInterview(candidateData);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Candidate added successfully'),
@@ -1091,23 +1110,20 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                     const SizedBox(height: 8),
 
                     // Dropdown that controls radio selection logic
-                    DropdownButtonFormField<CompanyIdName>(
+                    DropdownButtonFormField<Company>(
                       value: selectedCompany,
                       items: companies.map((company) {
-                        return DropdownMenuItem<CompanyIdName>(
+                        return DropdownMenuItem<Company>(
                           value: company,
-                          child: Text(company.companyName),
+                          child: Text(company.name),
                         );
                       }).toList(),
-                      onChanged: (CompanyIdName? selected) {
+                      onChanged: (Company? selected) {
                         if (selected != null) {
                           setState(() {
                             selectedCompany = selected;
-                            selectedCompanyId = selected.id
-                                .toString(); // set radio logic variable
-                            _onCompanySelected(
-                              selected.id.toString(),
-                            ); // mimic radio tap
+                            selectedCompanyId = selected.id;
+                            _onCompanySelected(selected.id);
                           });
                         }
                       },
@@ -1178,7 +1194,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    selectedCompany!.companyName,
+                                    selectedCompany!.name,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,

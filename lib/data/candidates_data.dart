@@ -14,6 +14,7 @@ List<Map<String, dynamic>> globalCandidates = [
     'addedDate': '2024-06-01',
     'notes': 'Strong in Flutter and Dart',
     'interviewTime': '2024-06-10 10:00',
+    'companyName': 'Tech Solutions Pvt Ltd',
   },
   {
     'id': 1718000000002,
@@ -28,6 +29,7 @@ List<Map<String, dynamic>> globalCandidates = [
     'addedDate': '2024-06-02',
     'notes': 'Excellent portfolio',
     'interviewTime': '2024-06-11 14:00',
+    'companyName': 'Tech Solutions Pvt Ltd',
   },
   {
     'id': 1718000000003,
@@ -42,6 +44,7 @@ List<Map<String, dynamic>> globalCandidates = [
     'addedDate': '2024-06-03',
     'notes': 'Great leadership skills',
     'interviewTime': '2024-06-12 11:30',
+    'companyName': 'Tech Solutions Pvt Ltd',
   },
   {
     'id': 1718000000004,
@@ -56,6 +59,7 @@ List<Map<String, dynamic>> globalCandidates = [
     'addedDate': '2024-06-04',
     'notes': 'Good communication',
     'interviewTime': '2024-06-13 09:00',
+    'companyName': 'Tech Solutions Pvt Ltd',
   },
   {
     'id': 1718000000005,
@@ -70,5 +74,6 @@ List<Map<String, dynamic>> globalCandidates = [
     'addedDate': '2024-06-05',
     'notes': 'AWS Certified',
     'interviewTime': '2024-06-14 16:00',
+    'companyName': 'Tech Solutions Pvt Ltd',
   },
 ];

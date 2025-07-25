@@ -4,13 +4,11 @@ import '../services/notification_service.dart';
 import '../../data/candidates_data.dart' as candidates_data;
 import '../widgets/candidate_popup_form.dart';
 import '../widgets/edit_candidate_popup.dart';
+import '../widgets/reschedule_popup_form.dart';
 import '../../data/user_role.dart';
 import 'package:excel/excel.dart' as excel;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../models/Candidate_model.dart';
 import '../services/candidate_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
@@ -57,7 +55,9 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
   // List<Map<String, dynamic>> get allCandidates =>
   //     candidates_data.globalCandidates;
 
-  late List<Map<String, dynamic>> allCandidates = [];
+  late List<Map<String, dynamic>> allCandidates = [
+    ...candidates_data.globalCandidates,
+  ];
   static var userId = "";
 
   @override
@@ -929,8 +929,7 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // load on filler
-    filteredCandidates = allCandidates;
+    // Add search listener only once
     _searchController.addListener(_onSearchChanged);
 
     return WillPopScope(
@@ -1509,7 +1508,7 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
                                   maxHeight:
                                       MediaQuery.of(context).size.height * 0.9,
                                 ),
-                                child: CandidatePopupForm(
+                                child: ReschedulePopupForm(
                                   userId: userId,
                                   initialPhone: (candidate['phone'] ?? '')
                                       .toString(),
@@ -1528,6 +1527,8 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
                                   initialInterviewTime:
                                       (candidate['interviewTime'] ?? '')
                                           .toString(),
+                                  initialCompany: (candidate['company'] ?? '')
+                                      .toString(),
                                   onlyEditTime: true,
                                   onBookInterview: (candidateData) {
                                     Navigator.pop(dialogContext);
@@ -1637,7 +1638,7 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
                                   maxHeight:
                                       MediaQuery.of(context).size.height * 0.9,
                                 ),
-                                child: CandidatePopupForm(
+                                child: ReschedulePopupForm(
                                   userId: userId,
                                   initialPhone: (candidate['phone'] ?? '')
                                       .toString(),
@@ -1656,6 +1657,8 @@ class _CandidatesTabScreenState extends State<CandidatesTabScreen> {
                                   initialInterviewTime:
                                       (candidate['interviewTime'] ?? '')
                                           .toString(),
+                                  initialCompany: (candidate['company'] ?? '')
+                                      .toString(),
                                   onlyEditTime: true,
                                   onBookInterview: (candidateData) {
                                     Navigator.pop(dialogContext);
