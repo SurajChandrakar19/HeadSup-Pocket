@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../services/notification_service.dart'
     show NotificationItem, NotificationType, NotificationService;
 import '../widgets/candidate_popup_form.dart';
 import '../../main.dart' show themeModeNotifier;
-import '../../data/candidates_data.dart' as candidates_data;
-import '../data/applications_data.dart';
 import '../../data/user_role.dart';
 import '../../data/performance_data.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +37,18 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
   static var userId = "";
   DashboardSummaryResponse? summary;
 
+  // Sample candidates data - replace with your actual data source
+  List<Map<String, dynamic>> candidates = [
+    {'name': 'Naveen M', 'id': 'HRS012', 'target': 0},
+    {'name': 'Rajeswari R', 'id': 'HRS012', 'target': 0},
+    {'name': 'Chandani', 'id': 'HRS012', 'target': 0},
+    {'name': 'Uma Devi', 'id': 'HRS012', 'target': 0},
+    {'name': 'Akhil', 'id': 'HRS012', 'target': 0},
+    {'name': 'Vanmati R', 'id': 'HRS012', 'target': 0},
+    {'name': 'Sandhaya', 'id': 'HRS012', 'target': 0},
+    {'name': 'Sushma', 'id': 'HRS012', 'target': 0},
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +56,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
         Provider.of<UserProvider>(context, listen: false).userId?.toString() ??
         '';
     loadGFICount();
-    // _loadGFICandidates();
   }
 
   @override
@@ -84,34 +94,8 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
               initialPhone: _phoneController.text,
               userId: userId,
               onBookInterview: (candidateData) {
-                Navigator.pop(context); // Close popup
-                _phoneController.clear(); // Clear input
-
-                // // Add to global candidates list
-                // candidates_data.globalCandidates.add(candidateData);
-
-                // // Add to global applications list
-                // globalApplications.insert(0, {
-                //   'id': globalApplications.isNotEmpty
-                //       ? (globalApplications.first['id'] as int) + 1
-                //       : 1,
-                //   'company':
-                //       candidateData['company'] ??
-                //       (candidateData['selectedCompany']?['name'] ??
-                //           'Not Assigned'),
-                //   'position': candidateData['role'] ?? 'Unknown Position',
-                //   'candidateName': candidateData['name'] ?? '',
-                //   'appliedDate': 'Applied today',
-                //   'status': 'pending',
-                //   'phone': candidateData['phone'] ?? '',
-                //   'whatsapp': candidateData['phone'] ?? '',
-                //   'avatar':
-                //       (candidateData['name'] != null &&
-                //           candidateData['name'].isNotEmpty)
-                //       ? candidateData['name'][0].toUpperCase()
-                //       : '',
-                // });
-
+                Navigator.pop(context);
+                _phoneController.clear();
                 _navigateToCandidatesTab();
               },
             ),
@@ -129,6 +113,23 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
         ),
         backgroundColor: Colors.green,
         duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Navigate to Set Target page
+  void _navigateToSetTarget() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SetTargetPage(
+          candidates: candidates,
+          onTargetUpdated: (updatedCandidates) {
+            setState(() {
+              candidates = updatedCandidates;
+            });
+          },
+        ),
       ),
     );
   }
@@ -163,7 +164,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                           size: 24,
                         ),
                       ),
-                      const SizedBox(width: 8), // space between icon and name
+                      const SizedBox(width: 8),
                       Consumer<UserProvider>(
                         builder: (context, userProvider, child) {
                           final userName = userProvider.name ?? 'Guest';
@@ -266,7 +267,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
-                              hintText: 'Enter 10-digit mobile number',
+                              hintText: 'Enter mobile number',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                                 borderSide: BorderSide(
@@ -277,6 +278,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                                 horizontal: 16,
                                 vertical: 12,
                               ),
+                              suffixIcon: const Icon(Icons.search),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -308,138 +310,128 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
 
                     const SizedBox(height: 24),
 
-                    // Original Targets For Today Section (UNCHANGED)
-                    _buildSectionCard(
-                      context,
-                      title: 'Targets For Today',
+                    // Updated Targets For Today Section with Set Target button
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E8), // Light green background
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Targets For Today',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: _navigateToSetTarget,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF0A7FF1),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Set Target',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
                           Row(
                             children: [
                               Expanded(
-                                child: _buildTargetItem(
-                                  context,
-                                  'Target Interview Scheduled',
-                                  _targetInterviewScheduled,
-                                  Colors.green,
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      '7/10',
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'Total Target',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              if (currentUserRole == 'admin')
-                                IconButton(
-                                  icon: const Icon(
-                                    Icons.edit,
-                                    color: Colors.blue,
-                                  ),
-                                  tooltip: 'Edit Target',
-                                  onPressed: () async {
-                                    final newValue = await showDialog<String>(
-                                      context: context,
-                                      builder: (context) {
-                                        final controller =
-                                            TextEditingController(
-                                              text: _targetInterviewScheduled,
-                                            );
-                                        return AlertDialog(
-                                          title: const Text(
-                                            'Edit Target Interview Scheduled',
-                                          ),
-                                          content: TextField(
-                                            controller: controller,
-                                            keyboardType: TextInputType.number,
-                                            decoration: const InputDecoration(
-                                              hintText: 'Enter new target',
-                                            ),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text('Cancel'),
-                                            ),
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(
-                                                context,
-                                                controller.text,
-                                              ),
-                                              child: const Text('Update'),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-
-                                    if (newValue != null &&
-                                        newValue.trim().isNotEmpty) {
-                                      final parsed = int.tryParse(
-                                        newValue.trim(),
-                                      );
-                                      if (parsed != null) {
-                                        try {
-                                          await DashboardService()
-                                              .updateTargetValue(
-                                                userId: userId,
-                                                targetValue: parsed,
-                                              );
-
-                                          setState(() {
-                                            _targetInterviewScheduled = parsed
-                                                .toString();
-                                          });
-
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Target updated successfully',
-                                              ),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                        } catch (e) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Error: $e'),
-                                              backgroundColor: Colors.red,
-                                            ),
-                                          );
-                                        }
-                                      } else {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Please enter a valid number',
-                                            ),
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
+                              Container(
+                                width: 1,
+                                height: 60,
+                                color: Colors.grey.withOpacity(0.3),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    const Text(
+                                      '4',
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const Text(
+                                      'Target Interview Scheduled',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 12),
                         ],
                       ),
                     ),
+
                     const SizedBox(height: 24),
 
-                    // Performance Report Section (NEW DESIGN)
+                    // Performance Report Section
                     _buildPerformanceReportSection(),
 
                     const SizedBox(height: 24),
 
-                    // GFI Calling Section (NEW DESIGN)
+                    // GFI Calling Section
                     _buildGFICallingSection(),
 
                     const SizedBox(height: 24),
 
-                    // Attendance Marking Section (NEW DESIGN)
+                    // Attendance Marking Section
                     _buildAttendanceMarkingSection(),
                   ],
                 ),
@@ -447,81 +439,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).textTheme.bodyLarge?.color,
-            ),
-          ),
-          const SizedBox(height: 16),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTargetItem(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-              ),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -593,7 +510,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    // Month Column - all corners rounded
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: const BoxDecoration(
@@ -666,7 +582,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Joining Column - all corners rounded
+              // Joining Column
               Expanded(
                 child: Column(
                   children: [
@@ -742,7 +658,7 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Closers Column - all corners rounded
+              // Closers Column
               Expanded(
                 child: Column(
                   children: [
@@ -1167,7 +1083,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  // Add your account settings navigation here
                 },
               ),
               ListTile(
@@ -1187,7 +1102,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  // Add your notifications navigation here
                 },
               ),
               ListTile(
@@ -1207,7 +1121,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  // Add your help & support navigation here
                 },
               ),
               const SizedBox(height: 10),
@@ -1216,7 +1129,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // Add your logout logic here
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red[400],
@@ -1233,7 +1145,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
     );
   }
 
-  // Notification item builder
   Widget _buildNotificationItem(
     BuildContext context,
     NotificationItem notification,
@@ -1337,12 +1248,9 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
     }
   }
 
-  // API connection for load all candidate on map fir GFi
   Future<void> _loadGFICandidates() async {
     try {
-      final data = await DashboardService.fetchGFICandidates(
-        userId,
-      ); // replace 1 with dynamic userId if needed
+      final data = await DashboardService.fetchGFICandidates(userId);
       setState(() {
         gfiCandidates = data;
       });
@@ -1351,7 +1259,6 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
     }
   }
 
-  // API connection for count how many are GFI
   Future<void> loadGFICount() async {
     try {
       final result = await DashboardService.getDashboardSummary(userId);
@@ -1364,18 +1271,585 @@ class _HomeTabScreenState extends State<HomeTabScreen> {
     }
   }
 
-  // API connection for load all candidate on map for Attendance Marking
   Future<void> _loadAttendanceMarking() async {
     try {
-      final data = await DashboardService.fetchAttendanceCandidates(
-        userId,
-      ); // replace 1 with dynamic userId if needed
+      final data = await DashboardService.fetchAttendanceCandidates(userId);
       setState(() {
         attendanceCandidates = data;
       });
     } catch (e) {
       print('Error: $e');
     }
+  }
+}
+
+// Set Target Page
+class SetTargetPage extends StatefulWidget {
+  final List<Map<String, dynamic>> candidates;
+  final Function(List<Map<String, dynamic>>) onTargetUpdated;
+
+  const SetTargetPage({
+    super.key,
+    required this.candidates,
+    required this.onTargetUpdated,
+  });
+
+  @override
+  State<SetTargetPage> createState() => _SetTargetPageState();
+}
+
+class _SetTargetPageState extends State<SetTargetPage> {
+  late List<Map<String, dynamic>> _candidates;
+
+  @override
+  void initState() {
+    super.initState();
+    _candidates = List.from(widget.candidates);
+  }
+
+  void _showTargetDialog(int index) {
+    final candidate = _candidates[index];
+    final TextEditingController controller = TextEditingController(
+      text: candidate['target'].toString(),
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        backgroundColor: Colors.white,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.85,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Blue header section
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF4A90E2),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Today's Target",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "${candidate['name']} ${candidate['id']}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        final newTarget = int.tryParse(controller.text) ?? 0;
+                        setState(() {
+                          _candidates[index]['target'] = newTarget;
+                        });
+                        widget.onTargetUpdated(_candidates);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Done',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // White content section
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Set Target',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    
+                    // Target input field
+                    Container(
+                      width: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.grey.withOpacity(0.5),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: TextField(
+                        controller: controller,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black87,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 12),
+                    const Text(
+                      'target',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReportDialog(int index) {
+    final candidate = _candidates[index];
+    
+    showDialog(
+      context: context,
+      builder: (context) => _ReportDialog(candidate: candidate),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Set Target',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+        ],
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _candidates.length,
+        itemBuilder: (context, index) {
+          final candidate = _candidates[index];
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "${index + 1}.${candidate['name']}",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        candidate['id'],
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => _showTargetDialog(index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0A7FF1),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Set',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _showReportDialog(index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Report',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Separate StatefulWidget for Report Dialog to handle tab switching
+class _ReportDialog extends StatefulWidget {
+  final Map<String, dynamic> candidate;
+
+  const _ReportDialog({required this.candidate});
+
+  @override
+  State<_ReportDialog> createState() => _ReportDialogState();
+}
+
+class _ReportDialogState extends State<_ReportDialog> {
+  bool _isYearlySelected = false; // Start with Monthly selected
+
+  // Monthly data (from first screenshot)
+  final Map<String, String> _monthlyData = {
+    'Target': '5',
+    'Turn-up': '6',
+    'Selection': '14',
+    'Joining': '5',
+    'Closer': '9',
+  };
+
+  // Yearly data (from second screenshot)
+  final Map<String, String> _yearlyData = {
+    'Target': '60',
+    'Turn-up': '72',
+    'Selection': '168',
+    'Joining': '60',
+    'Closer': '108',
+  };
+
+  void _shareReport() {
+    final period = _isYearlySelected ? 'Yearly' : 'Monthly';
+    final data = _isYearlySelected ? _yearlyData : _monthlyData;
+    
+    String shareText = '${widget.candidate['name']}/${widget.candidate['id']} - $period Report\n\n';
+    
+    data.forEach((key, value) {
+      shareText += '$key: $value\n';
+    });
+    
+    Share.share(shareText);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentData = _isYearlySelected ? _yearlyData : _monthlyData;
+    
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      backgroundColor: Colors.white,
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.85,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header section with share button
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 18, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "${widget.candidate['name']}/${widget.candidate['id']}",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _shareReport,
+                    child: Icon(
+                      Icons.share,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Tabs section
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  // Monthly tab
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isYearlySelected = false;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: !_isYearlySelected 
+                                  ? const Color(0xFF4A90E2)
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Monthly',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: !_isYearlySelected 
+                                ? FontWeight.w600 
+                                : FontWeight.w400,
+                            color: !_isYearlySelected 
+                                ? const Color(0xFF4A90E2)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Yearly tab
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isYearlySelected = true;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: _isYearlySelected 
+                                  ? const Color(0xFF4A90E2)
+                                  : Colors.transparent,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Yearly',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: _isYearlySelected 
+                                ? FontWeight.w600 
+                                : FontWeight.w400,
+                            color: _isYearlySelected 
+                                ? const Color(0xFF4A90E2)
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Divider line
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              height: 1,
+              color: Colors.grey.withOpacity(0.2),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Performance metrics
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                children: [
+                  // First row - Target and Turn-up
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMetricColumn('Target', currentData['Target']!),
+                      _buildMetricColumn('Turn-up', currentData['Turn-up']!),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 36),
+                  
+                  // Second row - Selection and Joining
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMetricColumn('Selection', currentData['Selection']!),
+                      _buildMetricColumn('Joining', currentData['Joining']!),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 36),
+                  
+                  // Third row - Closer (centered)
+                  _buildMetricColumn('Closer', currentData['Closer']!),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 32),
+            
+            // Back button
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              margin: const EdgeInsets.only(bottom: 20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[600],
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Back',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricColumn(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w400,
+            color: Colors.black87,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -1387,13 +1861,13 @@ class CandidateListDialog extends StatelessWidget {
   final String emptyMessage;
 
   const CandidateListDialog({
-    Key? key,
+    super.key,
     required this.title,
     required this.icon,
     required this.iconColor,
     required this.candidates,
     required this.emptyMessage,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

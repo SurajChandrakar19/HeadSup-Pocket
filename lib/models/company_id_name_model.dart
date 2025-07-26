@@ -5,7 +5,7 @@ class CompanyIdName {
   CompanyIdName({required this.id, required this.companyName});
 
   factory CompanyIdName.fromJson(Map<String, dynamic> json) {
-    return CompanyIdName(id: json['id'], companyName: json['companyName']);
+    return CompanyIdName(id: json['id'], companyName: json['name'] ?? json['companyName']);
   }
 
   Map<String, dynamic> toJson() {

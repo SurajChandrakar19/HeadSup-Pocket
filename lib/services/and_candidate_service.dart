@@ -1,5 +1,4 @@
 import '../models/company_model.dart';
-import '../models/localities_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/company_id_name_model.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../models/job_model_create.dart';
-import '../data/jobs_data.dart';
 import 'package:share_plus/share_plus.dart';
 import '../services/jobs_service.dart';
 import '../providers/user_provider.dart';

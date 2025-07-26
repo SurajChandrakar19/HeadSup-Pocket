@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
-import '../data/applications_data.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/application_service.dart';
