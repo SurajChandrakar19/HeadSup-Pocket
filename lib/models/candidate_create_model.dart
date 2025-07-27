@@ -10,6 +10,7 @@ class CandidateCreateDTO {
   final String interviewTime; // formatted as 'yyyy-MM-dd HH:mm'
   final int userId;
   final int companyId;
+  final String email;
 
   CandidateCreateDTO({
     required this.name,
@@ -23,6 +24,7 @@ class CandidateCreateDTO {
     required this.interviewTime,
     required this.userId,
     required this.companyId,
+    required this.email,
   });
 
   Map<String, dynamic> toJson() {
@@ -38,6 +40,7 @@ class CandidateCreateDTO {
       'interviewTime': interviewTime,
       'userId': userId,
       'companyId': companyId,
+      'email': email,
     };
   }
 }

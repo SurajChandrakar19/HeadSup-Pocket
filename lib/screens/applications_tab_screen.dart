@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/application_service.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
+import 'package:intl/intl.dart';
 
 class ApplicationsTabScreen extends StatefulWidget {
   final VoidCallback onBackToHome;
@@ -42,18 +43,8 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
       return applications;
     }
     return applications.where((app) {
-      switch (selectedFilter.toLowerCase()) {
-        case 'selected':
-          return app['status'] == 'selected';
-        case 'rejected':
-          return app['status'] == 'rejected';
-        case 'joined':
-          return app['status'] == 'joined';
-        case 'pending':
-          return app['status'] == 'pending';
-        default:
-          return true;
-      }
+      return (app['callStatus'] ?? '').toString().toLowerCase() ==
+          selectedFilter.toLowerCase();
     }).toList();
   }
 
@@ -96,26 +87,24 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
           elevation: 1,
           actions: [
             IconButton(
-              icon: Icon(
-                Icons.download,
-                color: Theme.of(context).iconTheme.color,
-              ),
-              tooltip: 'Download',
+              icon: Icon(Icons.download),
+              tooltip: 'Download CSV',
               onPressed: () async {
-                if (isSelectingForDownload &&
-                    selectedApplicationIndexes.isNotEmpty) {
-                  await _downloadSelectedApplications();
-                  setState(() {
-                    isSelectingForDownload = false;
-                    selectedApplicationIndexes.clear();
-                  });
-                } else {
+                try {
+                  await ReachedCandidateService.downloadReachedCandidatesCSV(
+                    userId,
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        'Press and hold an application to select applications for download.',
-                      ),
-                      backgroundColor: Colors.orange,
+                      content: Text('CSV downloaded successfully.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Download failed: $e'),
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
@@ -288,11 +277,11 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
   Widget _buildApplicationCard(Map<String, dynamic> application, int index) {
     Color getStatusColor(String status) {
       switch (status) {
-        case 'selected':
+        case 'Selected':
           return Colors.blue;
-        case 'rejected':
+        case 'Rejected':
           return Colors.red;
-        case 'joined':
+        case 'Joined':
           return Colors.green;
         default:
           return Colors.orange;
@@ -322,7 +311,15 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
           color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: getStatusColor(application['status'] ?? '').withOpacity(0.2),
+            color: getStatusColor(
+              (application['callStatus'] ?? '')
+                  .toString()
+                  .toLowerCase()
+                  .replaceFirstMapped(
+                    RegExp(r'^.'),
+                    (match) => match.group(0)!.toUpperCase(),
+                  ),
+            ).withOpacity(0.2),
             width: 1,
           ),
         ),
@@ -385,7 +382,7 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${application['addedDateTime'] ?? ''}',
+                            formatDate(application['addedDateTime']),
                             style: Theme.of(
                               context,
                             ).textTheme.bodyMedium?.copyWith(fontSize: 12),
@@ -405,7 +402,7 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      '${application['role'] ?? ''}',
+                      '${(application['candidateName'] ?? '').toString().isNotEmpty ? (application['candidateName'] as String)[0].toUpperCase() : ''}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -430,16 +427,38 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
                     ).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: getStatusColor(application['status'] ?? ''),
+                      color: getStatusColor(
+                        (application['callStatus'] ?? '')
+                            .toString()
+                            .toLowerCase()
+                            .replaceFirstMapped(
+                              RegExp(r'^.'),
+                              (match) => match.group(0)!.toUpperCase(),
+                            ),
+                      ),
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    getStatusText(application['status'] ?? ''),
+                    (application['callStatus'] ?? '')
+                        .toString()
+                        .toLowerCase()
+                        .replaceFirstMapped(
+                          RegExp(r'^.'),
+                          (match) => match.group(0)!.toUpperCase(),
+                        ),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: getStatusColor(application['status'] ?? ''),
+                      color: getStatusColor(
+                        (application['callStatus'] ?? '')
+                            .toString()
+                            .toLowerCase()
+                            .replaceFirstMapped(
+                              RegExp(r'^.'),
+                              (match) => match.group(0)!.toUpperCase(),
+                            ),
+                      ),
                     ),
                   ),
                 ),
@@ -626,64 +645,33 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
   ) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Update Application Status'),
-          content: Text(
-            'Are you sure you want to mark ${application['candidateName']} as $newStatus?',
+      builder: (_) => AlertDialog(
+        title: const Text('Update Application Status'),
+        content: Text('Mark ${application['candidateName']} as $newStatus?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                setState(() {
-                  // Find the application in the main list and update it
-                  final originalIndex = applications.indexWhere(
-                    (app) => app['id'] == application['id'],
-                  );
-                  if (originalIndex != -1) {
-                    applications[originalIndex]['status'] = newStatus;
-                  }
-                });
-
-                // Add notification
-                _notificationService.addNotification(
-                  title: 'Application Status Updated',
-                  message:
-                      '${application['candidateName']} has been marked as $newStatus',
-                  type: NotificationType.general,
-                  candidateName: application['candidateName'],
-                );
-
-                // Show success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${application['candidateName']} marked as $newStatus',
-                    ),
-                    backgroundColor: _getStatusColor(newStatus),
-                  ),
-                );
-              },
-              child: const Text('Update'),
-            ),
-          ],
-        );
-      },
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performStatusUpdate(application, newStatus);
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
     );
   }
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'selected':
+      case 'Selected':
         return Colors.blue;
-      case 'rejected':
+      case 'Rejected':
         return Colors.red;
-      case 'joined':
+      case 'Joined':
         return Colors.green;
       default:
         return Colors.orange;
@@ -713,6 +701,68 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
     );
   }
 
+  void _showErrorSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
+    );
+  }
+
+  Future<void> _performStatusUpdate(
+    Map<String, dynamic> application,
+    String newStatus,
+  ) async {
+    late BuildContext loaderContext;
+
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (ctx) {
+        loaderContext = ctx;
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    try {
+      final success = await CandidateTrack.updateStatus(
+        application['trackerId'].toString(),
+        newStatus.toUpperCase(),
+        userId,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pop(loaderContext); // Close loader
+
+      if (success) {
+        setState(() {
+          final idx = applications.indexWhere(
+            (app) => app['id'] == application['id'],
+          );
+          if (idx != -1) applications[idx]['status'] = newStatus;
+        });
+        _notificationService.addNotification(
+          title: 'Status Updated',
+          message: '${application['candidateName']} is now $newStatus',
+          type: NotificationType.general,
+          candidateName: application['candidateName'],
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Status changed to $newStatus'),
+            backgroundColor: _getStatusColor(newStatus),
+          ),
+        );
+      } else {
+        _showErrorSnackbar(context, 'Failed to update. Try again.');
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(loaderContext);
+        _showErrorSnackbar(context, 'Error: $e');
+      }
+    }
+  }
+
   Future<void> _loadApplication() async {
     try {
       final reachedCandidate =
@@ -722,6 +772,17 @@ class _ApplicationsTabScreenState extends State<ApplicationsTabScreen> {
       });
     } catch (e) {
       print('Error fetching reached candidates: $e');
+    }
+  }
+
+  String formatDate(String? dateTimeStr) {
+    if (dateTimeStr == null || dateTimeStr.isEmpty) return '';
+
+    try {
+      final dateTime = DateTime.parse(dateTimeStr);
+      return DateFormat('yyyy-MM-dd').format(dateTime); // Output: 2025-07-24
+    } catch (e) {
+      return ''; // Or handle parsing errors
     }
   }
 }

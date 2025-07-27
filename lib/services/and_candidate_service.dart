@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import '../models/company_model.dart';
 import '../models/localities_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/company_id_name_model.dart';
 import '../models/candidate_create_model.dart';
+import 'package:http_parser/http_parser.dart';
 
 class AddCandidateService {
   static const String baseUrl = 'http://localhost:8080/v1/auth';
@@ -77,22 +80,92 @@ class AddCandidateService {
     }
   }
 
+  // static Future<bool> createCandidate(
+  //   CandidateCreateDTO candidate,
+  //   String userId,
+  //   File? _resumeFile,
+  // ) async {
+  //   final url = Uri.parse('$baseUrl/$userId/add-candidate');
+  //   final response = await http.post(
+  //     url,
+  //     headers: {'Content-Type': 'application/json'},
+  //     body: json.encode(candidate.toJson()),
+  //   );
+  //   if (response.statusCode == 200 || response.statusCode == 201) {
+  //     return true;
+  //   } else {
+  //     print('Failed to create candidate: ${response.body}');
+  //     return false;
+  //   }
+  // }
+
+  // static Future<bool> createCandidate(
+  //   CandidateCreateDTO candidate,
+  //   String userId,
+  //   File? resumeFile,
+  // ) async {
+  //   final url = Uri.parse(
+  //     '$baseUrl/$userId/dashboard/add-candidates',
+  //   ); // Endpoint expects ?userid= in body, not URL
+  //   final request = http.MultipartRequest('POST', url)
+  //     ..fields['userid'] = userId
+  //     ..fields['candidate'] = json.encode(candidate.toJson());
+  //   if (resumeFile != null) {
+  //     request.files.add(
+  //       await http.MultipartFile.fromPath('resume', resumeFile.path),
+  //     );
+  //   }
+  //   try {
+  //     final streamedResponse = await request.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       return true;
+  //     } else {
+  //       print('Failed to create candidate: ${response.body}');
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     print('Error uploading candidate: $e');
+  //     return false;
+  //   }
+  // }
+
   static Future<bool> createCandidate(
     CandidateCreateDTO candidate,
     String userId,
+    File? resumeFile,
   ) async {
-    final url = Uri.parse('$baseUrl/$userId/add-candidate');
+    final url = Uri.parse('$baseUrl/$userId/dashboard/add-candidates');
 
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode(candidate.toJson()),
-    );
+    final request = http.MultipartRequest('POST', url)
+      ..fields['userId'] = userId
+      ..fields['candidate'] = json.encode(candidate.toJson());
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return true;
-    } else {
-      print('Failed to create candidate: ${response.body}');
+    if (resumeFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'resume',
+          resumeFile.path,
+          contentType: MediaType(
+            'application',
+            'pdf',
+          ), // or infer based on file
+        ),
+      );
+    }
+
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        print('Failed: ${response.statusCode}, ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Exception: $e');
       return false;
     }
   }

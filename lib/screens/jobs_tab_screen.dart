@@ -82,7 +82,9 @@ class _JobsTabScreenState extends State<JobsTabScreen> {
 
   List<Job> get filteredJobs {
     if (selectedFilter == 'All') return jobs;
-    return jobs.where((job) => job.jobType == selectedFilter).toList();
+    return jobs
+        .where((job) => job.type.toLowerCase() == selectedFilter.toLowerCase())
+        .toList();
   }
 
   // Selection state for download
@@ -129,19 +131,22 @@ class _JobsTabScreenState extends State<JobsTabScreen> {
               ),
               tooltip: 'Download',
               onPressed: () async {
-                if (isSelectingForDownload && selectedJobIndexes.isNotEmpty) {
-                  await _downloadSelectedJobs();
-                  setState(() {
-                    isSelectingForDownload = false;
-                    selectedJobIndexes.clear();
-                  });
-                } else {
+                try {
+                  // Replace with your actual user ID variable
+                  const userId = '123'; // or get it from context/auth state
+                  await JobService.downloadJobsCSV(userId);
+
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        'Press and hold a job card to select jobs for download.',
-                      ),
-                      backgroundColor: Colors.orange,
+                      content: Text('CSV downloaded successfully.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Download failed: $e'),
+                      backgroundColor: Colors.red,
                     ),
                   );
                 }
@@ -606,7 +611,7 @@ class _JobsTabScreenState extends State<JobsTabScreen> {
                                     companyName: result['company'] ?? '',
                                     location: result['location'] ?? '',
                                     salary: result['salary'] ?? '',
-                                    jobType: result['type'] ?? 'FULL_TIME',
+                                    type: result['type'] ?? 'FULL_TIME',
                                     description: result['description'] ?? '',
                                     aboutCompany: result['about'] ?? '',
                                     userId: 1, // replace with actual userId
@@ -839,7 +844,7 @@ class JobCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    job.jobType,
+                    job.type,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -1006,7 +1011,7 @@ class JobDetailsPanel extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    job.jobType,
+                    job.type,
                     style: const TextStyle(
                       color: greenAccent,
                       fontSize: 14,
@@ -1018,7 +1023,7 @@ class JobDetailsPanel extends StatelessWidget {
                 IconButton(
                   onPressed: () async {
                     final shareText =
-                        'Job Opportunity: ${job.jobTitle}\nCompany: ${job.companyName}\nLocation: ${job.location}\nSalary: ${job.salary}\nType: ${job.jobType}\nDescription: ${job.description}';
+                        'Job Opportunity: ${job.jobTitle}\nCompany: ${job.companyName}\nLocation: ${job.location}\nSalary: ${job.salary}\nType: ${job.type}\nDescription: ${job.description}';
                     await Share.share(shareText);
                   },
                   icon: const Icon(Icons.share, color: Color(0xFF0A7FF1)),

@@ -8,10 +8,13 @@ import '../../data/companies_data.dart';
 import '../models/localities_model.dart';
 import '../services/and_candidate_service.dart';
 import '../models/candidate_create_model.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 
 class CandidatePopupForm extends StatefulWidget {
   final String initialPhone;
   final String? initialName;
+  final String? initialEmail;
   final String? initialRole;
   final String? initialLocation;
   final String? initialQualification;
@@ -20,13 +23,13 @@ class CandidatePopupForm extends StatefulWidget {
   final bool onlyEditTime;
   final void Function(Map<String, dynamic> candidateData) onBookInterview;
   final VoidCallback? onCompanyAdded;
-
   final String userId;
 
   const CandidatePopupForm({
     super.key,
     required this.initialPhone,
     this.initialName,
+    this.initialEmail,
     this.initialRole,
     this.initialLocation,
     this.initialQualification,
@@ -49,6 +52,8 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
   final _ageController = TextEditingController();
   final _mobileController = TextEditingController();
   final _experienceController = TextEditingController();
+  final _emailController = TextEditingController();
+  File? _resumeFile;
 
   // Selection states
   String? selectedLocality;
@@ -99,6 +104,15 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
         _lastNameController.text = nameParts.sublist(1).join(' ');
       }
     }
+
+    if (widget.initialEmail != null && widget.initialEmail!.isNotEmpty) {
+      final nameParts = widget.initialEmail!.split(' ');
+      _firstNameController.text = nameParts.first;
+      if (nameParts.length > 1) {
+        _emailController.text = nameParts.sublist(1).join(' ');
+      }
+    }
+
     if (widget.initialExperience != null) {
       _experienceController.text = widget.initialExperience!;
     }
@@ -128,6 +142,29 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
     _ageController.dispose();
     _mobileController.dispose();
     super.dispose();
+  }
+
+  void _pickResume() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+    );
+
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _resumeFile = File(result.files.single.path!);
+        isResumeUploaded = true;
+        resumeFileName = result.files.single.name;
+      });
+    } else {
+      // User canceled the picker
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No resume selected'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _loadDataFromDatabase() async {
@@ -346,11 +383,13 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
         userId:
             int.tryParse(widget.userId) ?? 0, // Pass this via widget or state
         companyId: int.tryParse(selectedCompanyId!) ?? 0,
+        email: _firstNameController.text.trim() ?? '',
       );
 
       final success = await AddCandidateService.createCandidate(
         candidate,
         widget.userId,
+        _resumeFile,
       );
 
       if (success) {
@@ -624,6 +663,29 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                               border: UnderlineInputBorder(),
                               contentPadding: EdgeInsets.symmetric(vertical: 8),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          // ✅ Email Field (newly added)
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                              border: UnderlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Required';
+                              }
+                              final emailRegex = RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              );
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Enter a valid email';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 16),
                           // Age
@@ -1033,7 +1095,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                     _buildSectionTitle('Upload Resume'),
                     const SizedBox(height: 8),
                     GestureDetector(
-                      onTap: _showResumeUploadMessage,
+                      onTap: _pickResume,
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
@@ -1058,7 +1120,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                               size: 40,
                               color: isResumeUploaded
                                   ? Colors.green
-                                  : primaryBlue,
+                                  : Colors.blue,
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -1069,7 +1131,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                                 fontSize: 14,
                                 color: isResumeUploaded
                                     ? Colors.green
-                                    : textSecondary,
+                                    : Colors.black54,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -1078,7 +1140,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                                 'Tap to select resume file',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: textSecondary,
+                                  color: Colors.black45,
                                 ),
                               ),
                           ],
@@ -1086,6 +1148,7 @@ class _CandidatePopupFormState extends State<CandidatePopupForm> {
                       ),
                     ),
                     const SizedBox(height: 24),
+
                     // Company Selection
                     _buildSectionTitle('Select Company'),
                     const SizedBox(height: 8),

@@ -4,7 +4,7 @@ class Job {
   final String companyName;
   final String location;
   final String salary;
-  final String jobType;
+  final String type;
   final String description;
   final String aboutCompany;
   final int userId;
@@ -17,7 +17,7 @@ class Job {
     required this.companyName,
     required this.location,
     required this.salary,
-    required this.jobType,
+    required this.type,
     required this.description,
     required this.aboutCompany,
     required this.userId,
@@ -32,7 +32,7 @@ class Job {
       companyName: json['companyName'],
       location: json['location'],
       salary: json['salary'],
-      jobType: json['type'],
+      type: json['type'],
       description: json['description'],
       aboutCompany: json['aboutCompany'],
       userId: json['userId'],
@@ -48,7 +48,7 @@ class Job {
       'companyName': companyName,
       'location': location,
       'salary': salary,
-      'type': jobType,
+      'type': type,
       'description': description,
       'aboutCompany': aboutCompany,
       'userId': userId,
@@ -62,7 +62,7 @@ class Job {
     "companyName": companyName,
     "location": location,
     "salary": salary,
-    "type": jobType, // Ensure it matches your API: FULL_TIME, etc.
+    "type": type, // Ensure it matches your API: FULL_TIME, etc.
     "description": description,
     "aboutCompany": aboutCompany,
     "userId": userId,
